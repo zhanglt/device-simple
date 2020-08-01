@@ -20,20 +20,20 @@ deviceResources:
 
 deviceCommands:
 -
-  name: "randomnumber"
+  name: "Random"
   get:
   - { operation: "get", deviceResource: "randomnumber" }
 
 coreCommands:
   -
-    name: "randomnumber"
+    name: "Random"
     get:
         path: "/api/v1/device/{deviceId}/Random"
         responses:
           -
             code: "200"
             description: ""
-            expectedValues: ["Random"]
+            expectedValues: ["randomnumber"]
           -
             code: "503"
             description: "service unavailable"

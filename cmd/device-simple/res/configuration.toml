@@ -67,6 +67,6 @@ File = ''
       Address = 'random'
       Port = '300'
   [[DeviceList.AutoEvents]]
-    Resource = 'randomnumber'
+    Resource = 'Random'
     OnChange = false
     Frequency = '10s'
