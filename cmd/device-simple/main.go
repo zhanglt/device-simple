@@ -19,6 +19,7 @@ const (
 )
 
 func main() {
-	sd := driver.SimpleDriver{}
+	//sd := driver.SimpleDriver{}
+	sd := driver.Driver{}
 	startup.Bootstrap(serviceName, device.Version, &sd)
 }

@@ -2,7 +2,7 @@
 LogLevel = 'INFO'
 
 [Service]
-Host = "172.17.0.1"
+Host = "10.0.0.8"
 Port = 49990
 ConnectRetries = 20
 Labels = []
