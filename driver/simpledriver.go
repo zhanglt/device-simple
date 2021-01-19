@@ -16,9 +16,9 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"math/rand"
 	"os"
 	"time"
-	"math/rand"
 
 	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"

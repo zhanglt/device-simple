@@ -1,4 +1,4 @@
-module github.com/edgexfoundry/device-simple
+module github.com/zhanglt/device-simple
 
 go 1.13
 

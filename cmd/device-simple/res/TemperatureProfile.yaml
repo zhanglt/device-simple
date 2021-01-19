@@ -1,0 +1,35 @@
+name: "temperature-sensor"
+manufacturer: "xxx"
+model: "SP-01"
+labels:
+ - "temperature-sensor"
+description: "temperature sensor"
+
+deviceResources:
+    -
+        name: "temperature"
+        description: "获取温度"
+        properties:
+            value:
+                { type: "String", readWrite: "R", defaultValue: "{}" }
+    
+deviceCommands:
+    -
+        name: "temperature"
+        get:
+            - { operation: "get", object: "temperature" }
+
+coreCommands:
+    -
+        name: "temperature"
+        get:
+            path: "/api/v1/device/{deviceId}/temperature"
+            responses:
+            -
+                code: "200"
+                description: ""
+                expectedValues: ["temperature"]
+            -
+                code: "503"
+                description: "service unavailable"
+                expectedValues: []
