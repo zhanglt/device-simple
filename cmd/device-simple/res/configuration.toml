@@ -1,6 +1,12 @@
 [Writable]
 LogLevel = 'INFO'
-
+  # Example InsecureSecrets configuration that simulates SecretStore for when EDGEX_SECURITY_SECRET_STORE=false
+  [Writable.InsecureSecrets]
+    [Writable.InsecureSecrets.Sample]
+    path = "sample"
+      [Writable.InsecureSecrets.Sample.Secrets]
+      username = ""
+      password = ""
 [Service]
 Host = "10.0.0.8"
 Port = 49990
@@ -12,55 +18,67 @@ EnableAsyncReadings = true
 AsyncBufferSize = 16
 
 [Registry]
-Host = "10.0.0.70"
+Host = '10.0.0.70'
 Port = 8500
-Type = "consul"
-CheckInterval = "10s"
-FailLimit = 3
-FailWaitTime = 10
+Type = 'consul'
 
 [Clients]
   [Clients.Data]
-  Name = "edgex-core-data"
-  Protocol = "http"
-  Host = "10.0.0.70"
+  Protocol = 'http'
+  Host = '10.0.0.70'
   Port = 48080
-  Timeout = 5000
 
   [Clients.Metadata]
-  Name = "edgex-core-metadata"
-  Protocol = "http"
-  Host = "10.0.0.70"
+  Protocol = 'http'
+  Host = '10.0.0.70'
   Port = 48081
-  Timeout = 5000
 
-  [Clients.Logging]
-  Name = "edgex-support-logging"
-  Protocol = "http"
-  Host = "10.0.0.70"
-  Port = 48061
+# Example SecretStore configuration.
+# Only used when EDGEX_SECURITY_SECRET_STORE=true
+# Must also add `ADD_SECRETSTORE_TOKENS: "device-simple"` to vault-worker environment so it generates
+# the token and secret store in vault for 'device-simple'
+[SecretStore]
+Host = '10.0.0.70'
+Port = 8200
+Path = '/v1/secret/edgex/device-simple/'
+Protocol = 'http'
+RootCaCertPath = ''
+ServerName = ''
+TokenFile = '/tmp/edgex/secrets/device-simple/secrets-token.json'
+AdditionalRetryAttempts = 10
+RetryWaitPeriod = "1s"
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
 
 [Device]
   DataTransform = true
-  InitCmd = ""
-  InitCmdArgs = ""
+  InitCmd = ''
+  InitCmdArgs = ''
   MaxCmdOps = 128
   MaxCmdValueLen = 256
-  RemoveCmd = ""
-  RemoveCmdArgs = ""
-  ProfilesDir = "./res"
-
-[Logging]
-EnableRemote = false
-File = "./device-service.log"
+  RemoveCmd = ''
+  RemoveCmdArgs = ''
+  ProfilesDir = './res'
+  UpdateLastConnected = false
+  [Device.Discovery]
+    Enabled = false
+    Interval = '30s'
 
 # Pre-define Devices
 [[DeviceList]]
-  # 这里DeviceList的Name和Profile的值对应TemperatureProfile.yaml的name: "temperature-sensor"
-  Name = "temperature-sensor"
-  Profile = "temperature-sensor"        
-  Description = "温度传感器"
-  Labels = []
+  Name = 'Simple-Device01'
+  Profile = 'Simple-Device'
+  Description = 'Example of Simple Device'
+  Labels = [ 'industrial' ]
   [DeviceList.Protocols]
     [DeviceList.Protocols.other]
-      Address = "/api/v1/device/temperature-sensor"
+      Address = 'simple01'
+      Port = '300'
+  [[DeviceList.AutoEvents]]
+    Frequency = '10s'
+    OnChange = true 
+    Resource = 'Switch'
+  [[DeviceList.AutoEvents]]
+    Frequency = '30s'
+    OnChange =  true
+    Resource = 'Image'

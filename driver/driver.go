@@ -17,24 +17,24 @@ import (
 	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/zhanglt/device-simple/driver/temperaturesensor"
+	//包含temperaturesensor包
 )
 
 // Driver 是对device的操作
 type Driver struct {
-	lc      logger.LoggingClient
-	asyncCh chan<- *dsModels.AsyncValues
-
-	temperatureSensor *temperaturesensor.TemperatureSensor
+	lc                logger.LoggingClient
+	asyncCh           chan<- *dsModels.AsyncValues       //事件 通道
+	deviceCh          chan<- []dsModels.DiscoveredDevice //设备发现 通道
+	temperatureSensor *TemperatureSensor
 }
 
 // Initialize performs protocol-specific initialization for the device
 // service.
-func (s *Driver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues) error {
+func (s *Driver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) error {
 	s.lc = lc
 	s.asyncCh = asyncCh
-
-	s.temperatureSensor = temperaturesensor.NewTemperatureSensor(lc)
+	s.deviceCh = deviceCh
+	s.temperatureSensor = NewTemperatureSensor(lc)
 	return nil
 }
 
@@ -108,4 +108,33 @@ func (s *Driver) UpdateDevice(deviceName string, protocols map[string]contract.P
 func (s *Driver) RemoveDevice(deviceName string, protocols map[string]contract.ProtocolProperties) error {
 	s.lc.Debug(fmt.Sprintf("Device %s is removed", deviceName))
 	return nil
+}
+
+// Discover triggers protocol specific device discovery, which is an asynchronous operation.
+// Devices found as part of this discovery operation are written to the channel devices.
+func (s *Driver) Discover() {
+	proto := make(map[string]contract.ProtocolProperties)
+	proto["other"] = map[string]string{"Address": "simple02", "Port": "301"}
+
+	device2 := dsModels.DiscoveredDevice{
+		Name:        "Simple-Device02",
+		Protocols:   proto,
+		Description: "found by discovery",
+		Labels:      []string{"auto-discovery"},
+	}
+
+	proto = make(map[string]contract.ProtocolProperties)
+	proto["other"] = map[string]string{"Address": "simple03", "Port": "399"}
+
+	device3 := dsModels.DiscoveredDevice{
+		Name:        "Simple-Device03",
+		Protocols:   proto,
+		Description: "found by discovery",
+		Labels:      []string{"auto-discovery"},
+	}
+
+	res := []dsModels.DiscoveredDevice{device2, device3}
+
+	time.Sleep(10 * time.Second)
+	s.deviceCh <- res
 }

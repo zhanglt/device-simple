@@ -25,10 +25,12 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
+var count int = 0
+
 type SimpleDriver struct {
-	lc           logger.LoggingClient
-	asyncCh      chan<- *dsModels.AsyncValues
-	deviceCh     chan<- []dsModels.DiscoveredDevice
+	lc           logger.LoggingClient               // 日志记录器
+	asyncCh      chan<- *dsModels.AsyncValues       //通过ProtocolDrivers异步发送设备readings
+	deviceCh     chan<- []dsModels.DiscoveredDevice //设备发现
 	switchButton bool
 	xRotation    int32
 	yRotation    int32
@@ -67,20 +69,27 @@ func getImageBytes(imgFile string, buf *bytes.Buffer) error {
 	return nil
 }
 
-// Initialize performs protocol-specific initialization for the device
-// service.
-func (s *SimpleDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) error {
+// Initialize performs protocol-specific initialization for the device service.
+func (s *SimpleDriver) Initialize(
+	lc logger.LoggingClient,
+	asyncCh chan<- *dsModels.AsyncValues,
+	deviceCh chan<- []dsModels.DiscoveredDevice) error {
+	os.Setenv("EDGEX_SECURITY_SECRET_STORE", "false")
 	s.lc = lc
 	s.asyncCh = asyncCh
 	s.deviceCh = deviceCh
+
 	return nil
 }
 
 // HandleReadCommands triggers a protocol Read operation for the specified device.
 func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[string]contract.ProtocolProperties, reqs []dsModels.CommandRequest) (res []*dsModels.CommandValue, err error) {
 	s.lc.Debug(fmt.Sprintf("SimpleDriver.HandleReadCommands: protocols: %v resource: %v attributes: %v", protocols, reqs[0].DeviceResourceName, reqs[0].Attributes))
-
+	count = count + 1
+	fmt.Println(" 第自动上报次数：", count)
 	if len(reqs) == 1 {
+		fmt.Println("1reqs=:", reqs)
+		// CommandValue是一个结构，用来表示来自ProtocolDrivers的Get命令的读取值，或者发送给ProtocolDrivers的Put命令的参数。
 		res = make([]*dsModels.CommandValue, 1)
 		now := time.Now().UnixNano()
 		if reqs[0].DeviceResourceName == "randomnumber" {
@@ -113,6 +122,7 @@ func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[strin
 			res[0] = cv
 		}
 	} else if len(reqs) == 3 {
+		fmt.Println("3reqs:=", reqs)
 		res = make([]*dsModels.CommandValue, 3)
 		for i, r := range reqs {
 			var cv *dsModels.CommandValue
@@ -125,10 +135,11 @@ func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[strin
 			case "Zrotation":
 				cv, _ = dsModels.NewInt32Value(r.DeviceResourceName, now, s.zRotation)
 			}
+			fmt.Println("cv=====:", cv)
 			res[i] = cv
+			//fmt.Println(i, cv)
 		}
 	}
-
 	return
 }
 

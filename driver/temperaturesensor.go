@@ -21,7 +21,7 @@ type TemperatureSensor struct {
 func NewTemperatureSensor(lc logger.LoggingClient) *TemperatureSensor {
 	return &TemperatureSensor{
 		lc:      lc,
-		enabled: false,
+		enabled: true,
 	}
 }
 
@@ -53,8 +53,9 @@ func (t *TemperatureSensor) GetTemperature() (string, error) {
 	//} else {
 	//  return strings.TrimSuffix(out, "\n"), nil
 	//}
-	files, err := ioutil.ReadDir("/sys/bus/w1/devices")
+	files, err := ioutil.ReadDir("temperature")
 	if err != nil {
+		t.lc.Error("获取传感器温度失败", err)
 		return "", err
 	}
 	var sensorId string
@@ -64,7 +65,7 @@ func (t *TemperatureSensor) GetTemperature() (string, error) {
 		}
 	}
 
-	path := fmt.Sprintf("/sys/bus/w1/devices/%s/w1_slave", sensorId)
+	path := fmt.Sprintf("temperature/%s", sensorId)
 	file, err := os.Open(path)
 	if err != nil {
 		return "", err

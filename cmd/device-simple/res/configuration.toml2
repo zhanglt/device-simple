@@ -1,0 +1,73 @@
+[Writable]#type WritableInfo struct 
+LogLevel = 'DEBUG'  #可以在consul中更新
+
+[Service]#type ServiceInfo struct
+BootTimeout = 30000
+CheckInterval = '10s'
+Host = '10.0.0.8'
+ServerBindAddr = ''  # blank value defaults to Service.Host value
+Port = 49990  #modified to be different than existing device services
+Protocol = 'http'
+StartupMsg = 'device simple started'#启动成功消息
+Timeout = 20000
+ConnectRetries = 20
+Labels = []
+EnableAsyncReadings = true#是否支持异步读取设备数据
+AsyncBufferSize = 16#异步读取数据缓冲长度
+
+[Registry]#type RegistryService struct
+Host = '10.0.0.70'
+Port = 8500
+Type = 'consul'
+
+[Clients] #type ClientInfo struct 设备服务运行时需要使用其他微服务提供的功能，Client便是连接其他微服务所必须的参数，
+  [Clients.Data]
+  Protocol = 'http'
+  Host = '10.0.0.70'
+  Port = 48080
+
+  [Clients.Metadata]
+  Name = "edgex-core-metadata"
+  Protocol = 'http'
+  Host = '10.0.0.70'
+  Port = 48081
+
+  [Clients.Logging]
+  Protocol = 'http'
+  Host = '10.0.0.70'
+  Port = 48061
+
+
+[Device]#type DeviceInfo struct
+  DataTransform = true #是否对读取的设备数据进行转换，例如mask,shift,base,scale,offset.
+  InitCmd = ''#新设备加入时的初始化指令
+  InitCmdArgs = ''#初始化指令参数
+  MaxCmdOps = 128#定义了最大的资源操作数,可以在单个命令中发送给驱动程序。
+  MaxCmdValueLen = 256#指令参数或相应结果的最大长度
+  RemoveCmd = ''#设备移除时的指令
+  RemoveCmdArgs = ''#设备移除指令参数
+  ProfilesDir = './res'#设备profile目录，目录下所有.yml或.yaml后缀的文件将被当作deviceprofile文件
+  UpdateLastConnected = false
+  [Device.Discovery]
+    Enabled = false
+    Interval = '10s'
+
+# Remote and file logging disabled so only stdout logging is used
+[Logging]
+EnableRemote = false
+File = ''
+
+# Pre-define Devices
+[[DeviceList]]#type DeviceConfig struct  设备模型，设备服务启动时会读取该参数并写入cache。
+  Name = 'RandNum-Device01'
+  Profile = 'RandNum-Device'
+  Description = 'Random Number Generator Device'
+  Labels = [ "random", "test" ]
+  [DeviceList.Protocols]#对应HandleReadCommands方法的protocols map[string]contract.ProtocolProperties 参数
+    [DeviceList.Protocols.Other] 
+      Address = 'random'
+      Port = '300'
+  [[DeviceList.AutoEvents]]
+    Resource = 'Random'
+    OnChange = false
+    Frequency = '5s'
